@@ -26,7 +26,7 @@ export const upcomingConcerts: Concert[] = [
     date: "5 de Noviembre",
     venue: "Estadio Nacional",
     city: "Lima",
-    image: "/upcoming-concerts/guns-n-roses/banner.png",
+    image: "/media/v1/upcoming-concerts-guns-n-roses-banner.webp",
     merchPreview: "/placeholder.svg?height=400&width=600",
     color: "#ff0000",
     ticketProvider: "Teleticket",
@@ -34,9 +34,9 @@ export const upcomingConcerts: Concert[] = [
     message: "¡No te pierdas el regreso de Guns N' Roses a Lima! Consigue el merch oficial antes de que se agote.",
     spotifyId: "3qm84nBOXUEQ2vnTfUTTFC",
     shirts: [
-      "/shirts/guns-n-roses/shirt1.png",
-      "/shirts/guns-n-roses/shirt2.png",
-      "/shirts/guns-n-roses/shirt3.png",
+      "/media/v1/shirts-guns-n-roses-shirt1.webp",
+      "/media/v1/shirts-guns-n-roses-shirt2.webp",
+      "/media/v1/shirts-guns-n-roses-shirt3.webp",
     ],
   },
   {
@@ -54,9 +54,9 @@ export const upcomingConcerts: Concert[] = [
     message: "My Chemical Romance regresa a Lima con su gira mundial. ¡Consigue tu merch exclusivo para el show!",
     spotifyId: "7FBcuc1gsnv6Y1nwFtNRCb",
     shirts: [
-      "/shirts/my-chemical-romance/shirt1.png",
-      "/shirts/my-chemical-romance/shirt2.png",
-      "/shirts/my-chemical-romance/shirt3.png",
+      "/media/v1/shirts-my-chemical-romance-shirt1.webp",
+      "/media/v1/shirts-my-chemical-romance-shirt2.webp",
+      "/media/v1/shirts-my-chemical-romance-shirt3.webp",
     ],
   },
   {
@@ -66,7 +66,7 @@ export const upcomingConcerts: Concert[] = [
     date: "27 de Agosto",
     venue: "Estadio San Marcos",
     city: "Lima",
-    image: "/upcoming-concerts/green-day/banner.png",
+    image: "/media/v1/upcoming-concerts-green-day-banner.webp",
     merchPreview: "/placeholder.svg?height=400&width=600",
     color: "#ec0981",
     ticketProvider: "Ticketmaster",
@@ -74,9 +74,9 @@ export const upcomingConcerts: Concert[] = [
     message: "Green Day llega a Lima con su tour épico. ¡No te quedes sin tu merch oficial!",
     spotifyId: "7oPftvlwr6VrsViSDV7fJY",
     shirts: [
-      "/shirts/green-day/shirt1.png",
-      "/shirts/green-day/shirt2.png",
-      "/shirts/green-day/shirt3.png",
+      "/media/v1/shirts-green-day-shirt1.webp",
+      "/media/v1/shirts-green-day-shirt2.webp",
+      "/media/v1/shirts-green-day-shirt3.webp",
     ],
   },
 ]

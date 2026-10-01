@@ -11,7 +11,7 @@ export default function NosotrosPage() {
           aria-hidden="true"
           className="absolute inset-0 w-full h-full opacity-30 pointer-events-none select-none"
           style={{
-            backgroundImage: 'url("/rock-pattern.png")',
+            backgroundImage: 'url("/media/v1/rock-pattern.webp")',
             backgroundRepeat: 'repeat',
             backgroundSize: '360px 360px',
             zIndex: 1,
@@ -38,7 +38,7 @@ export default function NosotrosPage() {
         <div className="flex-1 flex justify-center">
           <div className="rounded-3xl shadow-2xl w-full max-w-2xl bg-black flex items-center justify-center" style={{minHeight:'180px'}}>
             <img
-              src="/jiron-long.png"
+              src="/media/v1/jiron-long.webp"
               alt="Jirón de La Unión Lima"
               className="rounded-3xl object-cover w-full h-full invert"
             />

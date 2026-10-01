@@ -1,5 +1,15 @@
 # Grunge Merch
 
+## Consumo de transferencia
+
+- El reproductor adjunta la URL del audio únicamente al pulsar Play. Las portadas son archivos WebP independientes; no se descarga el MP3 para leer etiquetas.
+- Los archivos de `public/media/v1` tienen caché de navegador de un año. Para cambiar un archivo publicado, usa un nombre nuevo o una nueva carpeta de versión y actualiza sus referencias; no sobrescribas una URL inmutable.
+- Las canciones se sirven completas a 128 kbps. Las imágenes grandes se redujeron a WebP, conservando transparencias.
+- El proxy de imágenes solo acepta proveedores del catálogo, comprueba cada redirección, limita las respuestas a 5 MB y usa un tiempo máximo de 8 segundos.
+- `pnpm check` comprueba TypeScript y las restricciones del proxy. `pnpm build` valida la compilación de producción.
+
+Para comprobar el ahorro, compara Fast Data Transfer de **grunge** en Vercel durante períodos equivalentes. El consumo previo al despliegue sigue formando parte del total del período.
+
 Interfaz web de una tienda de merch oficial de bandas de grunge y rock, creada con Next.js y Tailwind CSS.
 
 ## Descripción

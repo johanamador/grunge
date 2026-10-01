@@ -133,7 +133,7 @@ export default function ConcertosPage() {
           aria-hidden="true"
           className="absolute inset-0 w-full h-full opacity-30 pointer-events-none select-none"
           style={{
-            backgroundImage: 'url("/rock-pattern.png")',
+            backgroundImage: 'url("/media/v1/rock-pattern.webp")',
             backgroundRepeat: 'repeat',
             backgroundSize: '360px 360px',
             zIndex: 1,

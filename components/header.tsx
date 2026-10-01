@@ -8,41 +8,41 @@ import Searchbar from "@/components/searchbar"
 import { useCart } from "@/components/cart-context";
 import { useToast } from "@/hooks/use-toast";
 
-// Declaración de tipos para jsmediatags y función global para pausar el header
 declare global {
-  interface Window {
-    jsmediatags: any;
-    __pauseHeaderPlayer?: () => void;
-  }
+  interface Window { __pauseHeaderPlayer?: () => void }
 }
 
-// Lista de canciones disponibles
 const rockPlaylist = [
   {
     id: 1,
     title: "Welcome to the Jungle",
     artist: "Guns N Roses",
-    src: "/music/guns-n-roses-welcome-to-the-jungle.mp3"
+    src: "/media/v1/guns-n-roses-welcome-to-the-jungle.mp3",
+    artwork: "/media/v1/guns-n-roses-welcome-to-the-jungle.webp"
   },
   {
     id: 2,
     title: "I'm Not Okay",
     artist: "My Chemical Romance",
-    src: "/music/mcr-im-not-okay.mp3"
+    src: "/media/v1/mcr-im-not-okay.mp3",
+    artwork: "/media/v1/mcr-im-not-okay.webp"
   },
   {
     id: 3,
     title: "American Idiot",
     artist: "Green Day",
-    src: "/music/green-day-american-idiot.mp3"
+    src: "/media/v1/green-day-american-idiot.mp3",
+    artwork: "/media/v1/green-day-american-idiot.webp"
   },
   {
     id: 4,
     title: "The Emptiness Machine",
     artist: "Linkin Park",
-    src: "/music/linkin-park-the-emptiness-machine.mp3"
+    src: "/media/v1/linkin-park-the-emptiness-machine.mp3",
+    artwork: "/media/v1/linkin-park-the-emptiness-machine.webp"
   }
 ]
+
 
 export default function Header() {
   const [isPlaying, setIsPlaying] = useState(false)
@@ -50,311 +50,73 @@ export default function Header() {
   const [volume, setVolume] = useState(0.7)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
-  const [albumArt, setAlbumArt] = useState<string | null>(null)
-  const [isLoadingArt, setIsLoadingArt] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
-  const [showCart, setShowCart] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [hasUserInteracted, setHasUserInteracted] = useState(false)
+  const [showCart, setShowCart] = useState(false)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
-  const { items, removeFromCart, getCount } = useCart();
-  const { toast } = useToast();
-  const totalItems = getCount();
+  const { items, removeFromCart, getCount } = useCart()
+  const { toast } = useToast()
+  const totalItems = getCount()
+  const albumArt = rockPlaylist[currentSong].artwork
 
-  // Pausar iframes de Spotify al reproducir en el header
-  const pauseSpotifyIframes = () => {
-    const iframes = document.querySelectorAll('iframe[src*="open.spotify.com/embed/artist"]');
-    iframes.forEach((iframe) => {
-      // Forzar reload del src para pausar el reproductor de Spotify
-      const src = iframe.getAttribute('src');
-      if (src) iframe.setAttribute('src', src);
-    });
-  };
-
-  // Funciones de control del reproductor
   const togglePlay = () => {
-    if (!audioRef.current) return
-
-    // Marcar que el usuario ha interactuado
-    if (!hasUserInteracted) {
-      setHasUserInteracted(true)
-    }
-
-    if (isPlaying) {
-      audioRef.current.pause()
+    const audio = audioRef.current
+    if (!audio) return
+    if (!audio.paused) {
+      audio.pause()
       setIsPlaying(false)
-    } else {
-      pauseSpotifyIframes(); // Pausar iframes de Spotify
-      audioRef.current.play().then(() => {
-        setIsPlaying(true)
-      }).catch((error) => {
-        console.log('Error al reproducir:', error)
-        setIsPlaying(false)
-      })
+      return
     }
+    document.querySelectorAll('iframe[src*="open.spotify.com/embed/artist"]').forEach(iframe => {
+      const src = iframe.getAttribute('src')
+      if (src) iframe.setAttribute('src', src)
+    })
+    // Attaching the source only on Play prevents even metadata downloads on visits.
+    const src = rockPlaylist[currentSong].src
+    if (audio.getAttribute('src') !== src) audio.src = src
+    audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
   }
-
-  const nextSong = () => {
-    setCurrentSong((prev) => (prev + 1) % rockPlaylist.length)
-  }
-
-  const prevSong = () => {
-    setCurrentSong((prev) => (prev - 1 + rockPlaylist.length) % rockPlaylist.length)
-  }
-
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value)
-    setVolume(newVolume)
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume
-    }
-  }
-
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime)
-    }
-  }
-
-  const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      setDuration(audioRef.current.duration)
-      // Intentar extraer metadatos de la imagen
-      extractAlbumArt()
-    }
-  }
-
-  const extractAlbumArt = async () => {
-    console.log('Extrayendo album art para canción:', currentSong, rockPlaylist[currentSong].title)
-
-    // Iniciar estado de loading
-    setIsLoadingArt(true)
-
-    try {
-      // Método 1: Intentar usar jsmediatags para extraer metadatos del MP3
-      const response = await fetch(rockPlaylist[currentSong].src)
-      const arrayBuffer = await response.arrayBuffer()
-
-      console.log('Archivo MP3 cargado, tamaño:', arrayBuffer.byteLength)
-
-      // Usar jsmediatags si está disponible
-      if (window.jsmediatags) {
-        console.log('jsmediatags disponible, extrayendo metadatos...')
-        window.jsmediatags.read(new Blob([arrayBuffer]), {
-          onSuccess: function (tag: any) {
-            console.log('Metadatos extraídos exitosamente:', tag.tags)
-            console.log('Tags disponibles:', Object.keys(tag.tags))
-
-            if (tag.tags.picture) {
-              console.log('Imagen encontrada en MP3')
-              console.log('Formato de imagen:', tag.tags.picture.format)
-              console.log('Tamaño de imagen:', tag.tags.picture.data.length)
-
-              const picture = tag.tags.picture
-
-              // Mejorar la conversión a base64 para imágenes grandes
-              let base64String;
-              try {
-                // Método optimizado para imágenes grandes
-                const uint8Array = new Uint8Array(picture.data);
-
-                // Convertir en chunks para evitar stack overflow
-                let binary = '';
-                const chunkSize = 8192; // 8KB chunks
-
-                for (let i = 0; i < uint8Array.length; i += chunkSize) {
-                  const chunk = uint8Array.slice(i, i + chunkSize);
-                  binary += String.fromCharCode.apply(null, Array.from(chunk));
-                }
-
-                base64String = btoa(binary);
-
-                const mimeType = picture.format || 'image/jpeg'
-                const imageUrl = `data:${mimeType};base64,${base64String}`
-                console.log('Imagen convertida exitosamente, MIME:', mimeType)
-                setAlbumArt(imageUrl)
-                setIsLoadingArt(false) // Finalizar loading
-              } catch (conversionError) {
-                console.log('Error convirtiendo imagen a base64:', conversionError)
-                // Método alternativo usando FileReader
-                try {
-                  const blob = new Blob([new Uint8Array(picture.data)], { type: picture.format || 'image/jpeg' });
-                  const reader = new FileReader();
-                  reader.onload = function () {
-                    setAlbumArt(reader.result as string);
-                    setIsLoadingArt(false); // Finalizar loading
-                    console.log('Imagen convertida con FileReader');
-                  };
-                  reader.readAsDataURL(blob);
-                } catch (fallbackError) {
-                  console.log('Error en método alternativo:', fallbackError);
-                  setDefaultAlbumArt();
-                  setIsLoadingArt(false); // Finalizar loading
-                }
-              }
-            } else {
-              console.log('No se encontró imagen en MP3, buscando en otros campos...')
-              // Buscar en otros posibles campos de imagen
-              const possibleImageFields = ['APIC', 'PIC', 'artwork', 'cover']
-              let imageFound = false
-
-              for (const field of possibleImageFields) {
-                if (tag.tags[field]) {
-                  console.log(`Imagen encontrada en campo ${field}`)
-                  // Procesar imagen del campo alternativo
-                  // Similar al procesamiento anterior
-                  imageFound = true
-                  break
-                }
-              }
-
-              if (!imageFound) {
-                console.log('No se encontró imagen en ningún campo, usando fallback')
-                setDefaultAlbumArt()
-                setIsLoadingArt(false) // Finalizar loading
-              }
-            }
-          },
-          onError: function (error: any) {
-            console.log('Error extrayendo metadatos:', error)
-            console.log('Detalles del error:', error.type, error.info)
-            setDefaultAlbumArt()
-            setIsLoadingArt(false) // Finalizar loading
-          }
-        })
-      } else {
-        console.log('jsmediatags no disponible, usando fallback')
-        setDefaultAlbumArt()
-        setIsLoadingArt(false) // Finalizar loading
-      }
-    } catch (error) {
-      console.log('Error al procesar el archivo MP3:', error)
-      setDefaultAlbumArt()
-      setIsLoadingArt(false) // Finalizar loading
-    }
-  }
-
-  const setDefaultAlbumArt = () => {
-    // Fallback: usar imágenes extraídas manualmente de los MP3
-    let defaultArt;
-    switch(currentSong) {
-      case 0:
-        defaultArt = "/album-art/guns-n-roses-appetite-for-destruction.jpg";
-        break;
-      case 1:
-        defaultArt = "/album-art/mcr-three-cheers.jpg";
-        break;
-      case 2:
-        defaultArt = "/album-art/green-day-american-idiot.jpg";
-        break;
-      case 3:
-        defaultArt = "/album-art/linkin-park-meteora.jpg";
-        break;
-      default:
-        defaultArt = "/album-art/default-rock.jpg";
-    }
-    setAlbumArt(defaultArt)
-    setIsLoadingArt(false) // Finalizar loading
-  }
-
-  const handleSongEnd = () => {
-    nextSong()
-  }
-
+  const nextSong = () => setCurrentSong(prev => (prev + 1) % rockPlaylist.length)
+  const prevSong = () => setCurrentSong(prev => (prev - 1 + rockPlaylist.length) % rockPlaylist.length)
+  const handleSongEnd = nextSong
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => setVolume(Number(e.target.value))
+  const handleTimeUpdate = () => setCurrentTime(audioRef.current?.currentTime || 0)
+  const handleLoadedMetadata = () => setDuration(audioRef.current?.duration || 0)
   const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60)
-    const seconds = Math.floor(time % 60)
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`
+    const seconds = Number.isFinite(time) ? Math.floor(time) : 0
+    return Math.floor(seconds / 60) + ':' + (seconds % 60).toString().padStart(2, '0')
   }
 
-  // Effect para cambiar canción
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.src = rockPlaylist[currentSong].src
-      if (isPlaying) {
-        audioRef.current.play()
-      }
-    }
-  }, [currentSong])
-
-  // Effect separado para extraer album art cuando cambie la canción
-  useEffect(() => {
-    // Resetear album art y activar loading
-    setAlbumArt(null)
-    setIsLoadingArt(true)
-    // Extraer album art después de un pequeño delay
-    const timer = setTimeout(() => {
-      extractAlbumArt()
-    }, 100)
-
-    return () => clearTimeout(timer)
-  }, [currentSong])
-
-  // Effect para configurar la canción aleatoria inicial
-  useEffect(() => {
-    // Seleccionar una canción aleatoria al cargar
-    const randomSong = Math.floor(Math.random() * rockPlaylist.length)
-    console.log(`Canción aleatoria seleccionada: ${randomSong} - ${rockPlaylist[randomSong].title}`)
-    setCurrentSong(randomSong)
-  }, [])
-
-  // Effect para cargar jsmediatags, configurar volumen inicial y detectar interacciones
-  useEffect(() => {
-    // Cargar jsmediatags desde CDN si no está disponible
-    if (!window.jsmediatags) {
-      const script = document.createElement('script')
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js'
-      script.async = true
-      script.onload = () => {
-        // Una vez cargado jsmediatags, extraer album art inicial
-        setTimeout(() => extractAlbumArt(), 100)
-      }
-      document.head.appendChild(script)
+    const audio = audioRef.current
+    if (!audio) return
+    const wasPlaying = !audio.paused || audio.ended
+    audio.pause()
+    setCurrentTime(0)
+    setDuration(0)
+    if (wasPlaying) {
+      audio.src = rockPlaylist[currentSong].src
+      audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
     } else {
-      // Si ya está cargado, extraer album art inicial
-      setTimeout(() => extractAlbumArt(), 100)
+      audio.removeAttribute('src')
+      audio.load()
+      setIsPlaying(false)
     }
+  }, [currentSong])
 
-    // Listener para detectar primera interacción del usuario
-    const handleFirstInteraction = () => {
-      if (!hasUserInteracted) {
-        console.log('Primera interacción del usuario detectada')
-        setHasUserInteracted(true)
-      }
-    }
-
-    // Agregar listeners para diferentes tipos de interacción
-    document.addEventListener('click', handleFirstInteraction)
-    document.addEventListener('keydown', handleFirstInteraction)
-    document.addEventListener('touchstart', handleFirstInteraction)
-
-    return () => {
-      // Limpiar listeners
-      document.removeEventListener('click', handleFirstInteraction)
-      document.removeEventListener('keydown', handleFirstInteraction)
-      document.removeEventListener('touchstart', handleFirstInteraction)
-    }
-  }, [hasUserInteracted])
-
-  // Nuevo effect SOLO para actualizar el volumen del audio
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume
-    }
+    setCurrentSong(Math.floor(Math.random() * rockPlaylist.length))
+  }, [])
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume
   }, [volume])
-
-  // Registrar función global para pausar el header
   useEffect(() => {
     window.__pauseHeaderPlayer = () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      }
-    };
-    return () => {
-      window.__pauseHeaderPlayer = undefined;
-    };
-  }, []);
+      audioRef.current?.pause()
+      setIsPlaying(false)
+    }
+    return () => { window.__pauseHeaderPlayer = undefined }
+  }, [])
 
   return (
     <>
@@ -378,9 +140,7 @@ export default function Header() {
               <div className="hidden lg:flex items-center space-x-4 mr-8">
                 {/* Album Art con Loading */}
                 <div className="w-10 h-10 rounded overflow-hidden flex items-center justify-center">
-                  {isLoadingArt ? (
-                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-600 border-t-white"></div>
-                  ) : albumArt ? (
+                  {albumArt ? (
                     <img
                       src={albumArt}
                       alt="Album Art"
@@ -414,7 +174,7 @@ export default function Header() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={prevSong}
+                    aria-label="Canción anterior" onClick={prevSong}
                     className="text-gray-300 hover:text-black p-1 h-7 w-7"
                   >
                     <SkipBack className="h-3 w-3" />
@@ -423,6 +183,7 @@ export default function Header() {
                     variant="ghost"
                     size="sm"
                     onClick={togglePlay}
+                    aria-label={isPlaying ? "Pausar música" : "Reproducir música"}
                     className="text-gray-300 hover:text-black p-1 h-7 w-7"
                   >
                     {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
@@ -430,7 +191,7 @@ export default function Header() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={nextSong}
+                    aria-label="Siguiente canción" onClick={nextSong}
                     className="text-gray-300 hover:text-black p-1 h-7 w-7"
                   >
                     <SkipForward className="h-3 w-3" />
@@ -574,7 +335,8 @@ export default function Header() {
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleSongEnd}
-        preload="metadata"
+        onError={() => setIsPlaying(false)}
+        preload="none"
       />
       
       {/* Sidebar del Carrito */}
@@ -700,9 +462,7 @@ export default function Header() {
           <div className="flex items-center gap-3 px-4 py-4 border-b">
             {/* Album Art */}
             <div className="w-12 h-12 rounded overflow-hidden flex items-center justify-center bg-gray-100">
-              {isLoadingArt ? (
-                <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-brand-500"></div>
-              ) : albumArt ? (
+              {albumArt ? (
                 <img src={albumArt} alt="Album Art" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-6 h-6 bg-gray-300 rounded" />
@@ -717,13 +477,13 @@ export default function Header() {
                 {rockPlaylist[currentSong].artist}
               </div>
               <div className="flex items-center mt-1 gap-1">
-                <Button variant="ghost" size="icon" className="h-7 w-7 p-0 text-gray-500 hover:text-brand-500" onClick={prevSong}>
+                <Button variant="ghost" size="icon" className="h-7 w-7 p-0 text-gray-500 hover:text-brand-500" aria-label="Canción anterior" onClick={prevSong}>
                   <SkipBack className="h-4 w-4" />
                 </Button>
                 <Button variant="ghost" size="icon" className="h-7 w-7 p-0 text-gray-500 hover:text-brand-500" onClick={togglePlay}>
                   {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 p-0 text-gray-500 hover:text-brand-500" onClick={nextSong}>
+                <Button variant="ghost" size="icon" className="h-7 w-7 p-0 text-gray-500 hover:text-brand-500" aria-label="Siguiente canción" onClick={nextSong}>
                   <SkipForward className="h-4 w-4" />
                 </Button>
               </div>
